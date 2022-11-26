@@ -1,6 +1,7 @@
 package model;
 
 import graph.*;
+import ui.ArtemisCrewManager;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -10,29 +11,70 @@ public class ArtemisCrewController<V> {
     private Graph<V> graph;
     private String implementation;
     private Map map;
+    private Spaceship spaceship;
 
     public ArtemisCrewController(String implementation){
+        map = new Map();
+
         this.implementation = implementation;
+        spaceship = new Spaceship(200000);
+
 
         if(implementation.equalsIgnoreCase("adjacency_list")){
             this.graph = new Graph<>("adjacency_list", 0,0);
         } else {
             this.graph = new Graph<>("adjacency_matrix", 50, 53);
         }
-
-        this.map = new Map();
-
-        for (int i = 0; i < map.getPlanets().size(); i++) {
-            if(map.getPlanets().get(i).getName().equalsIgnoreCase("Earth")){
-                spaceship.setPlanetOn(map.getPlanets().get(i));
-                break;
-            }
-        }
+        //for (int i = 0; i < map.getPlanets().size(); i++) {
+          //  if(map.getPlanets().get(i).getName().equalsIgnoreCase("Earth")){
+            //    spaceship.setPlanetOn(map.getPlanets().get(i));
+              //  break;
+            //}
+        //}
     } // constructor
 
-    public void travel(Planet planet){
-        canWeGo(spaceship.getPlanetOn().getName(), planet.getName())
-        if()
+    public String whereIsArtemis(){
+        return this.spaceship.getPlanetOn().getName();
+    }
+
+    public double travel(V valueFrom, V value, double fuel){
+        GraphNode<V> vertexFrom = searchVertex(valueFrom);
+        GraphNode<V> vertexTo = searchVertex(value);
+
+        graph.dijkstra(vertexFrom);
+        ArrayList<GraphNode<V>> path = graph.getShortestPathTo(vertexTo);
+        double consumedFuel = 0;
+        int cont = 0;
+
+        for (GraphNode<V> node:
+             path) {
+
+            if(cont < path.size()-1){
+                cont++;
+            }
+
+            System.out.println(fuel);
+
+            if(implementation.equalsIgnoreCase("adjacency_list")){
+                for (int j = 0; j < node.getEdgesAdjacencyList().size(); j++) {
+                    if(node.getEdgesAdjacencyList().get(j).getTo().equals(path.get(cont-1))){
+                        consumedFuel+=node.getEdgesAdjacencyList().get(j).getWeight();
+                    }
+                }
+            } // if
+
+            if(implementation.equalsIgnoreCase("adjacency_matrix")){
+                for (int i = 0; i < graph.getGraphNodesAdjacencyMatrix().length; i++) {
+                    for (int j = 0; j < graph.getGraphNodesAdjacencyMatrix()[0].length; j++) {
+                        if(i==path.get(cont-1).getPosition() && j==path.get(cont).getPosition()){
+                            consumedFuel+=node.getEdgesAdjacencyList().get(j).getWeight();
+                        }
+                    }
+                }
+            } // if
+        } // for
+
+        return fuel-consumedFuel;
     }
 
     public ArrayList<GraphNode<V>> minimumPathFromOnePlanetToAnother(V value1, V value2){
@@ -177,10 +219,6 @@ public class ArtemisCrewController<V> {
         }
         return "";
     } // planet info
-
-    public String whereIsArtemis(){
-        return spaceship.getPlanetOn().getName();
-    }
 
     public void addPlanet(String name) {
         Planet planet;

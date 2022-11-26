@@ -17,14 +17,12 @@ public class ArtemisCrewManager {
     private static ArtemisCrewController<Planet> artemisCrewController;
     private static Map map;
     private static String implementation;
-    private static Spaceship spaceship;
 
     public static void main(String[] args) throws FileNotFoundException {
         showMainMenu();
     }
 
     public static void init(int implementation) throws FileNotFoundException {
-        spaceship = new Spaceship(200000);
         if(implementation==1){
             artemisCrewController = new ArtemisCrewController<>("adjacency_list");
             ArtemisCrewManager.implementation = "adjacency_list";
@@ -34,6 +32,10 @@ public class ArtemisCrewManager {
         }
         map = new Map();
         load();
+
+        Planet planetOn = artemisCrewController.searchPlanet("Earth");
+        artemisCrewController.getSpaceship().setPlanetOn(planetOn);
+        artemisCrewController.getSpaceship().setFuel(200000);
     } // init
 
     public static void showMainMenu() throws FileNotFoundException {
@@ -118,8 +120,32 @@ public class ArtemisCrewManager {
                     break;
 
                 case 5:
-                    String start = JOptionPane.showInputDialog("Type the name of the planet where you are departing:");
-                    String finish = JOptionPane.showInputDialog("Type the name of the planet where you want to arrive:");
+                    String finish = JOptionPane.showInputDialog("Type the name of the planet where you will arrive:");
+
+                    if(artemisCrewController.searchPlanet(finish)!=null){
+                        Planet from = artemisCrewController.getSpaceship().getPlanetOn();
+                        System.out.println(artemisCrewController.getSpaceship().getPlanetOn());
+                        Planet to = artemisCrewController.searchPlanet(finish);
+
+                        if(artemisCrewController.canWeGo(from, to).equals("")){
+                            JOptionPane.showMessageDialog(null, "Sorry, we're having errors.");
+                        } else {
+                            if(artemisCrewController.canWeGo(from, to).contains("YES! You can go from the planet")){
+                                if(artemisCrewController.travel(from, to, artemisCrewController.getSpaceship().getFuel())>=0){
+                                    JOptionPane.showMessageDialog(null, "OK! You traveled to that planet.\n" +
+                                            "Your fuel is: "+artemisCrewController.travel(from, to, artemisCrewController.getSpaceship().getFuel()));
+                                    artemisCrewController.getSpaceship().setFuel(artemisCrewController.travel(from, to, artemisCrewController.getSpaceship().getFuel()));
+                                    artemisCrewController.getSpaceship().setPlanetOn(to);
+                                } else {
+                                    JOptionPane.showMessageDialog(null,"NO! You don't have the enough fuel.\n" +
+                                            "If you do the travel, then your fuel is going to be: "+artemisCrewController.travel(from, to, artemisCrewController.getSpaceship().getFuel()));
+                                }
+                            }
+                        }
+                    } else {
+                        JOptionPane.showMessageDialog(null, "At least one of those planets doesn't exist :/");
+                    }
+
                     break;
 
                 case 0:
@@ -156,7 +182,6 @@ public class ArtemisCrewManager {
                     }
                     map.addPlanet(planet);
                 }
-
                 artemisCrewController.setMap(map);
                 fis.close();
                 addNodesToGraph();
